@@ -1,26 +1,44 @@
 import json
+import boto3
 
-def parameter_attain(event,name):
-    return event['queryStringParameters'][name]
+def flight_data_get():
+    s3 = boto3.client('s3')
+    bucket = 'flight-advisor-flights'
+    key = 'flight_data_sample.csv'
+    response = s3.get_object(Bucket=bucket,Key=key)
+    content = response['Body']
+    flight_data = content.read()
+    return flight_data 
 
-def data_response_object_generate(event):
-    origin = parameter_attain(event,'origin')
-    destination = parameter_attain(event,'destination')
-    airline = parameter_attain(event,'airline')
+def data_response_object_generate(event,flight_data):
+    queryStringParameters = event['queryStringParameters']
+    origin = queryStringParameters['origin']
+    destination =queryStringParameters['destination']
+    airline = queryStringParameters['airline']
     return {
         'origin':origin,
         'destination':destination,
-        'airline':airline
+        'airline':airline,
+        'flight_data':flight_data
         }
 
 def response_object_generate(data_response_object):
-    response_object = {}
-    response_object['statusCode'] = 200
-    response_object['headers']['Content-Type'] = 'application/json'
-    response_object['body'] = json.dumps(data_response_object)
-    return response_object 
+    return {
+        'statusCode':200,
+        'headers':{
+            'Content-Type':'application/json'
+        },
+        'body':json.dumps(data_response_object)
+    }
+
+def lambda_handler_default(event,context):
+    return {
+        'statusCode':200,
+        'body':json.dumps('hello')
+    }
 
 def lambda_handler(event, context):
-    data_response_object = data_response_object_generate(event)
+    flight_data = flight_data_get()
+    data_response_object = data_response_object_generate(event,flight_data)
     response_object = response_object_generate(data_response_object)
     return response_object
