@@ -1,18 +1,21 @@
 import json
 import boto3
+import logging 
+import pandas as pd
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+def flight_data_df_from_response(response):
+    initial_df = pd.read_csv(obj['Body'])
+    return initial_df
 
 def flight_data_get():
     s3 = boto3.client('s3')
     bucket = 'flight-advisor-flights'
     key = 'flight_data_sample.csv'
     response = s3.get_object(Bucket=bucket,Key=key)
-    content = response['Body']
-    flight_data = content.read()
-    return flight_data 
+    return flight_data_df_from_response(response)
 
 def data_response_object_generate(event,flight_data):
     queryStringParameters = event['queryStringParameters']
