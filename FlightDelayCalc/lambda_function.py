@@ -1,6 +1,10 @@
 import json
 import boto3
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+
 def flight_data_get():
     s3 = boto3.client('s3')
     bucket = 'flight-advisor-flights'
@@ -19,7 +23,7 @@ def data_response_object_generate(event,flight_data):
         'origin':origin,
         'destination':destination,
         'airline':airline,
-        'flight_data':flight_data
+        'flight_data':str(flight_data)
         }
 
 def response_object_generate(data_response_object):
@@ -38,7 +42,12 @@ def lambda_handler_default(event,context):
     }
 
 def lambda_handler(event, context):
+    logger.info('Event: %s', event)
+
     flight_data = flight_data_get()
     data_response_object = data_response_object_generate(event,flight_data)
     response_object = response_object_generate(data_response_object)
+
+    logger.info('Calculated result of %s', str(response_object))
+
     return response_object
